@@ -29,3 +29,23 @@ Next, from the VS code terminal configure the project:
 
     idf.py build
     idf.py -p /dev/cu.usbserial-1110 flash monitor
+
+### Certificate
+
+The initially provided certificate was not valid anymore, so this had to be replaced. First get the new public certificate:
+
+    openssl s_client -showcerts -connect raw.githubusercontent.com:443
+
+Replace 'server_certs/ca_cert.pem' with the certificate chain in the output. Now, any new binary built and flashed should allow
+OTA updates from raw.githubusercontent.com over port 443.
+
+    idf.py clean build
+    idf.py -p /dev/cu.usbserial-1110 flash monitor
+
+Ensure that any new binary images are also built with this certificate. Otherwise you could expect the initial OTA update to be OK, but
+the new image will fail with the following error when attempting another OTA update:
+
+    I (5704) tb_ota: Target firmware version: v1.2
+    I (5704) tb_ota: Firmware URL: https://raw.githubusercontent.com/bluelabsw/esp32-ota-poc/master/firmware/esp32_ota-v1.2.bin
+    E (5774) esp-tls-mbedtls: mbedtls_ssl_handshake returned -0x2700
+    I (5774) esp-tls-mbedtls: Failed to verify peer certificate!
